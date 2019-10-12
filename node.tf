@@ -1,29 +1,3 @@
-resource "aws_security_group" "node" {
-  name        = "node"
-  description = "access to node"
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [local.trusted]
-  }
-
-  ingress {
-    from_port   = local.port
-    to_port     = local.port
-    protocol    = "tcp"
-    cidr_blocks = [local.trusted]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
 resource "aws_key_pair" "key" {
   key_name   = "node"
   public_key = file(local.public_key)
@@ -40,6 +14,7 @@ data "aws_ami" "ami" {
 }
 
 resource "aws_instance" "node" {
+  count                       = 2
   instance_type               = local.instance_type
   ami                         = data.aws_ami.ami.image_id
   security_groups             = [aws_security_group.node.name]
