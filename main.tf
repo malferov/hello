@@ -5,3 +5,5 @@ terraform {
 terraform {
   backend "local" {}
 }
+
+provider "aws" {}

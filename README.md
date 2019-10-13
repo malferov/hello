@@ -25,17 +25,15 @@ I would like to ask you guys to discuss together pros and cons, and make a delib
 
 
 ### infrastructure
-set the following variables in both `var.tf` and `terraform.tfvars`.  
-location of variables does simplify any further maintenance of infrastructure.  
-but we also have to think about sensitive data.  
-the first file is being committed into source and consists of variable parameters.  
-the latter file is sensitive, needs to be created manually based on the template below.  
+export the following environment variables and set parameters in `var.tf` file.  
+environment variables consist of sevsitive data, while var.tf consists of parameters committed to the source.  
 ```
-cat > terraform.tfvars <<EOF
-access_key = "your aws access key"
-secret_key = "your aws secret key"
-region     = "aws region of operation"
-EOF
+export AWS_ACCESS_KEY_ID=<your aws access key>
+export AWS_SECRET_ACCESS_KEY=<your aws secret key>
+export AWS_DEFAULT_REGION=<aws region of operation>
+export TF_VAR_region=$AWS_DEFAULT_REGION
+# the latter duplication is necessary for work together terraform and aws cli
+# aws cli needed later during build stage
 ```
 in order to deploy cloud infrastructure to aws we use terraform tool and HCL configuration language.  
 terraform v0.12 needs to be installed on management workstation.  
@@ -53,6 +51,16 @@ terraform apply
 ```
 
 ### build
+install aws cli
+```
+pip3 install awscli --upgrade --user
+```
+export the following environment variable either in local or github actions environment.  
+```
+terraform state show aws_ecr_repository.ecr | grep repository_url
+export HELLO_REPOSITORY_URL=<repository_url>
+./src/build.sh
+```
 github actions
 ECR
 

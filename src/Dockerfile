@@ -9,4 +9,4 @@ ARG port
 EXPOSE $port
 COPY --from=build /go/src/app .
 ENTRYPOINT ["./app"]
-CMD ["5000", "9ec9a47"]
+CMD ["5000", "24adf75"]

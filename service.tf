@@ -19,8 +19,8 @@ resource "aws_ecs_task_definition" "task" {
   container_definitions = <<TASK
 [
   {
-    "name": "hello",
-    "image": "docker.io/malferov/app:${var.build}",
+    "name": "${local.app}",
+    "image": "${aws_ecr_repository.ecr.repository_url}:${var.build}",
     "memory": 128,
     "essential": true,
     "portMappings": [
