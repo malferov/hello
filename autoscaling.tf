@@ -14,15 +14,17 @@ resource "aws_key_pair" "key" {
 }
 
 resource "aws_launch_configuration" "launch" {
-  image_id                    = data.aws_ami.ami.image_id
-  instance_type               = local.instance_type
-  user_data                   = <<USERDATA
+  image_id             = data.aws_ami.ami.image_id
+  instance_type        = local.instance_type
+  user_data            = <<USERDATA
 #!/bin/bash
 echo ECS_CLUSTER=ecs | sudo tee /etc/ecs/ecs.config
 USERDATA
-  key_name                    = aws_key_pair.key.id
-  security_groups             = [aws_security_group.node.id]
-  iam_instance_profile        = aws_iam_instance_profile.ecs-instance-profile.id
+  key_name             = aws_key_pair.key.id
+  security_groups      = [aws_security_group.node.id]
+  iam_instance_profile = aws_iam_instance_profile.ecs-instance-profile.id
+  # the below is acceptable for the sake of simplicity
+  # for more secure production setup vpc could be splitted into private/public subnets
   associate_public_ip_address = true
 }
 
