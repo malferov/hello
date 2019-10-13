@@ -23,6 +23,10 @@ Because it will affect further maintenance and operational costs, velocity of de
 It is not a single person decision.  
 I would like to ask you guys to discuss together pros and cons, and make a deliberate decision ;)  
 
+### application
+i took liberties with requirements and added two extra endpoints  
+`/hc` because it is needed by loadbalancer infrastructure, and  
+`/version` this one helps to debug and test deployment rollout  
 
 ### infrastructure
 export the following environment variables and set parameters in `var.tf` file.  
@@ -59,7 +63,7 @@ export the following environment variable either in local or github actions envi
 ```
 terraform state show aws_ecr_repository.ecr | grep repository_url
 export HELLO_REPOSITORY_URL=<repository_url>
-./src/build.sh
+cd src && ./build.sh
 ```
 github actions
 ECR
@@ -76,6 +80,9 @@ In order to deploy `hello` to production we need two actions `bump app version` 
 
 # release the latest app version
 terraform apply
+# plan should say the following
+#         Plan: 1 to add, 1 to change, 1 to destroy.
+# it is correct, we are replacing ecs task, and updating in-place service. type "yes"
 ```
 
 ### integration test

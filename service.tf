@@ -23,6 +23,12 @@ resource "aws_ecs_task_definition" "task" {
     "image": "${aws_ecr_repository.ecr.repository_url}:${var.build}",
     "memory": 128,
     "essential": true,
+    "environment": [
+      {
+        "name": "GIN_MODE",
+	"value": "release"
+      }
+    ],
     "portMappings": [
       {
         "containerPort": ${local.port},
