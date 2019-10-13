@@ -6,4 +6,5 @@ locals {
   port          = 5000
   trusted       = "85.148.177.204/32"
   app           = "hello"
+  cluster_size  = 1
 }

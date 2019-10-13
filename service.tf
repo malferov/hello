@@ -26,7 +26,7 @@ resource "aws_ecs_task_definition" "task" {
     "portMappings": [
       {
         "containerPort": ${local.port},
-        "hostPort": ${local.port}
+        "hostPort": 0
       }
     ]
   }
