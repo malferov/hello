@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 )
 
@@ -12,9 +13,8 @@ const (
 	version = "0.2.0"
 )
 
-type user struct {
-	username string    `json:"userName"`
-	birthday time.Time `json:"dateOfBirth"`
+type DateOfBirth struct {
+	Value CustomTime `json:"dateOfBirth" binding:"required"`
 }
 
 func main() {
@@ -45,15 +45,36 @@ func getVersion(c *gin.Context) {
 		"lang":    "golang",
 	}
 	hostname, err := os.Hostname()
-	if err == nil {
-		body["hostname"] = hostname
-		c.JSON(http.StatusOK, body)
-	} else {
+	if err != nil {
 		body["error"] = err.Error()
 		c.JSON(http.StatusInternalServerError, body)
+	} else {
+		body["hostname"] = hostname
+		c.JSON(http.StatusOK, body)
 	}
 }
 
 func putUser(c *gin.Context) {
-	c.Status(http.StatusNoContent)
+	username := c.Param("username")
+	// validate username
+	var alpha = regexp.MustCompile(`^[[:alpha:]]+$`).MatchString
+	if !alpha(username) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "username should contain only letters"})
+	} else {
+		var birthday DateOfBirth
+		// validate json payload
+		c.Header("Content-Type", "application/json") // BindJSON set text/plain if error
+		err := c.BindJSON(&birthday)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "cannot find date of birth",
+				"details": err.Error(),
+			})
+		} else {
+			// validate future date
+			// post to db
+			c.Status(http.StatusNoContent)
+			log.Printf("%s, %s", username, time.Time(birthday.Value).Format("2006-01-02"))
+		}
+	}
 }
