@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +18,12 @@ type DateOfBirth struct {
 	Value CustomTime `json:"dateOfBirth" binding:"required"`
 }
 
+var Rdb = redis.NewClient(&redis.Options{
+	Addr:     "localhost:6379",
+	Password: "",
+	DB:       0,
+})
+
 func main() {
 	if len(os.Args) < 3 {
 		log.Fatal("please specify port and build arguments")
@@ -26,6 +33,11 @@ func main() {
 	router.GET("/hc", healthCheck)
 	router.GET("/version", getVersion)
 	router.PUT("/hello/:username", putUser)
+	router.GET("/hello/:username", getUser)
+
+	pong, err := Rdb.Ping().Result()
+	log.Println(pong, err)
+
 	router.Run(":" + port)
 }
 
@@ -72,9 +84,40 @@ func putUser(c *gin.Context) {
 			})
 		} else {
 			// validate future date
-			// post to db
-			c.Status(http.StatusNoContent)
-			log.Printf("%s, %s", username, time.Time(birthday.Value).Format("2006-01-02"))
+			textual := time.Time(birthday.Value).Format("2006-01-02")
+			// post data to db
+			err := Rdb.Set(username, textual, 0).Err()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error":   "storage not ready",
+					"details": err,
+				})
+			} else {
+				c.Status(http.StatusNoContent)
+				log.Printf("%s, %s", username, textual)
+			}
 		}
+	}
+}
+
+func getUser(c *gin.Context) {
+	username := c.Param("username")
+	// read data from db
+	v, err := Rdb.Get(username).Result()
+	if err == redis.Nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "user not found",
+		})
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "storage not ready",
+			"details": err,
+		})
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"userName":    username,
+			"dateOfBirth": v,
+		})
+
 	}
 }
