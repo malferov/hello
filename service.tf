@@ -21,7 +21,7 @@ resource "aws_ecs_task_definition" "task" {
   {
     "name": "${local.app_name}",
     "image": "${aws_ecr_repository.ecr.repository_url}:${var.build}",
-    "memory": 128,
+    "memory": ${local.app_memory},
     "essential": true,
     "environment": [
       {

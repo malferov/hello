@@ -9,7 +9,7 @@ resource "aws_vpc" "vpc" {
 }
 
 resource "aws_subnet" "subnet" {
-  count             = 2
+  count             = 2 # reasonable minimum
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = cidrsubnet(aws_vpc.vpc.cidr_block, 8, count.index)
   availability_zone = "${var.region}${element(local.az, count.index)}"

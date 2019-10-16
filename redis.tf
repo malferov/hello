@@ -1,26 +1,3 @@
-#variable "vpc" {}
-#variable "microservices_sg" {}
-#variable "instance_type" {}
-/*
-data "aws_security_group" "microservices" {
-  tags = {
-    Type = "${var.microservices_sg}"
-  }
-}
-
-data "aws_vpc" "vpc" {
-  tags = {
-    Type = "Microservices"
-  }
-}
-
-data "aws_subnet_ids" "subnet" {
-  vpc_id = "${data.aws_vpc.vpc.id}"
-  tags = {
-    Network = "Private"
-  }
-}
-*/
 resource "aws_elasticache_subnet_group" "redis" {
   name        = "redis"
   subnet_ids  = aws_subnet.subnet.*.id

@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	version = "0.2.0"
+	version = "0.3.0"
 )
 
 type DateOfBirth struct {
@@ -31,12 +31,18 @@ func main() {
 	if len(os.Args) < 3 {
 		log.Fatal("please specify port and build arguments")
 	}
+
 	port := os.Args[1]
 	router := gin.Default()
+
 	router.GET("/hc", healthCheck)
 	router.GET("/version", getVersion)
-	router.PUT("/hello/:username", putUser)
-	router.GET("/hello/:username", getUser)
+
+	group := router.Group("/hello")
+	{
+		group.PUT("/:username", putUser)
+		group.GET("/:username", getUser)
+	}
 
 	pong, err := Rdb.Ping().Result()
 	log.Println(pong, err)
