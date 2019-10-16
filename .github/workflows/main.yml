@@ -16,5 +16,6 @@ jobs:
     - run: |
         go get github.com/gin-gonic/gin
         go get github.com/go-redis/redis
+        go get github.com/stretchr/testify/assert
         cd src
         go test -v
