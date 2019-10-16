@@ -3,14 +3,14 @@ resource "aws_ecs_cluster" "ecs" {
 }
 
 resource "aws_ecs_service" "srv" {
-  name            = local.app
+  name            = local.app_name
   cluster         = aws_ecs_cluster.ecs.id
   task_definition = aws_ecs_task_definition.task.arn
-  desired_count   = 1
+  desired_count   = local.app_size
   load_balancer {
     target_group_arn = aws_lb_target_group.tg.arn
-    container_name   = local.app
-    container_port   = local.port
+    container_name   = local.app_name
+    container_port   = local.app_port
   }
 }
 
@@ -19,7 +19,7 @@ resource "aws_ecs_task_definition" "task" {
   container_definitions = <<TASK
 [
   {
-    "name": "${local.app}",
+    "name": "${local.app_name}",
     "image": "${aws_ecr_repository.ecr.repository_url}:${var.build}",
     "memory": 128,
     "essential": true,
@@ -27,11 +27,15 @@ resource "aws_ecs_task_definition" "task" {
       {
         "name": "GIN_MODE",
 	"value": "release"
+      },
+      {
+        "name": "REDIS_ENDPOINT",
+	"value": "aws_elasticache_replication_group.redis.primary_endpoint_address"
       }
     ],
     "portMappings": [
       {
-        "containerPort": ${local.port},
+        "containerPort": ${local.app_port},
         "hostPort": 0
       }
     ]

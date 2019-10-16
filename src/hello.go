@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 	"log"
@@ -17,6 +18,9 @@ const (
 type DateOfBirth struct {
 	Value CustomTime `json:"dateOfBirth" binding:"required"`
 }
+
+// not 100% sure about this implementation
+// for `high load` setup we need shared db connection, rather than global Rdb var
 
 var Rdb = redis.NewClient(&redis.Options{
 	Addr:     "localhost:6379",
@@ -84,17 +88,24 @@ func putUser(c *gin.Context) {
 			})
 		} else {
 			// validate future date
-			textual := time.Time(birthday.Value).Format("2006-01-02")
-			// post data to db
-			err := Rdb.Set(username, textual, 0).Err()
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"error":   "storage not ready",
-					"details": err,
+			now := time.Now()
+			if now.Before(time.Time(birthday.Value)) {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": "date of birth must be a date before the today date",
 				})
 			} else {
-				c.Status(http.StatusNoContent)
-				log.Printf("%s, %s", username, textual)
+				textual := time.Time(birthday.Value).Format(CustomFormat)
+				// post data to db
+				err := Rdb.Set(username, textual, 0).Err()
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"error":   "storage not ready",
+						"details": err,
+					})
+				} else {
+					c.Status(http.StatusNoContent)
+					log.Printf("%s, %s", username, textual)
+				}
 			}
 		}
 	}
@@ -114,10 +125,24 @@ func getUser(c *gin.Context) {
 			"details": err,
 		})
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"userName":    username,
-			"dateOfBirth": v,
-		})
-
+		birthday, err := time.Parse(CustomFormat, v)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "cannot parse value from storage",
+				"details": err,
+			})
+		} else {
+			//now := time.Now()
+			n := 1
+			var msg string
+			if n == 0 {
+				msg = fmt.Sprintf("Hello, %s! Happy birthday!", username)
+			} else {
+				msg = fmt.Sprintf("Hello, %s! Your birthday is in %d day(s), %v", username, n, birthday)
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"message": msg,
+			})
+		}
 	}
 }

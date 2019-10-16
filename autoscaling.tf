@@ -7,7 +7,7 @@ data "aws_ami" "ami" {
     values = ["amzn2-ami-ecs-hvm-*-x86_64-ebs"]
   }
 }
-
+// temp
 resource "aws_key_pair" "key" {
   key_name   = "node"
   public_key = file(local.public_key)

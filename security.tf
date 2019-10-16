@@ -31,8 +31,8 @@ resource "aws_security_group" "alb" {
   vpc_id      = aws_vpc.vpc.id
 
   ingress {
-    from_port   = local.port
-    to_port     = local.port
+    from_port   = local.app_port
+    to_port     = local.app_port
     protocol    = "tcp"
     cidr_blocks = [local.trusted]
   }
@@ -42,5 +42,18 @@ resource "aws_security_group" "alb" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "redis" {
+  name        = "redis"
+  description = "access to redis"
+  vpc_id      = aws_vpc.vpc.id
+
+  ingress {
+    from_port       = local.redis_port
+    to_port         = local.redis_port
+    protocol        = "TCP"
+    security_groups = [aws_security_group.node.id]
   }
 }
