@@ -17,5 +17,6 @@ jobs:
         go get github.com/gin-gonic/gin
         go get github.com/go-redis/redis
         go get github.com/stretchr/testify/assert
+        docker-compose up -d
         cd src
         go test -v
