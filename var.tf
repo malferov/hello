@@ -3,7 +3,6 @@ variable "region" {}
 
 locals {
   instance_type       = "t2.micro"
-  public_key          = ".key/id_rsa.pub"
   app_name            = "hello"
   app_port            = 5000
   app_size            = 1

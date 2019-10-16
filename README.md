@@ -63,7 +63,8 @@ export the following environment variable either in local or github actions envi
 ```
 terraform state show aws_ecr_repository.ecr | grep repository_url
 export HELLO_REPOSITORY_URL=<repository_url>
-cd src && ./build.sh
+cd src
+./build.sh
 ```
 github actions
 ECR
@@ -88,5 +89,28 @@ terraform apply
 ### integration test
 ```
 terraform state show aws_lb.alb | grep dns_name
-curl <dns_name>:5000/ | jq
+curl <dns_name>:5000/version | jq
+```
+
+### local deployment and tests
+```
+# install golang
+curl -O https://dl.google.com/go/go1.13.1.linux-amd64.tar.gz
+tar -C /usr/local -xzf go1.13.1.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+# install compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+# run redis
+docker-compose up -d
+# unit test
+cd src
+go test -v
+# build app
+go build -o hello
+# run app
+export REDIS_ENDPOINT=localhost:6379
+./hello 5000 local
+# integration test
+curl localhost:5000/version | jq
 ```

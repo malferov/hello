@@ -47,7 +47,7 @@ func TestPutUser(t *testing.T) {
 	payload := []byte(`{"dateOfBirth":"2006-01-02"}`)
 	w := performRequest(router, "PUT", "/hello/john", bytes.NewBuffer(payload))
 	assert.Equal(t, http.StatusNoContent, w.Code, testcase)
-	assert.Equal(t, "", w.Body.String(), testcase)
+	assert.Empty(t, w.Body.String(), testcase)
 
 	testcase = "malformed username"
 	w = performRequest(router, "PUT", "/hello/john7", nil)
@@ -73,4 +73,17 @@ func TestPutUser(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "error", testcase)
 }
 
-//assert.JSONEq(t, `{}`, w.Body.JSON())
+func TestGetUser(t *testing.T) {
+	router := gin.New()
+	router.GET("/hello/:username", getUser)
+
+	testcase := "normal request"
+	w := performRequest(router, "GET", "/hello/john", nil)
+	assert.Equal(t, http.StatusOK, w.Code, testcase)
+	assert.Contains(t, w.Body.String(), "message", testcase)
+
+	testcase = "malformed username or user not found"
+	w = performRequest(router, "GET", "/hello/john7", nil)
+	assert.Equal(t, http.StatusNotFound, w.Code, testcase)
+	assert.JSONEq(t, `{"message": "user not found"}`, w.Body.String(), testcase)
+}

@@ -21,9 +21,8 @@ type DateOfBirth struct {
 
 // not 100% sure about this implementation
 // for `high load` setup we need shared db connection, rather than global Rdb var
-
 var Rdb = redis.NewClient(&redis.Options{
-	Addr:     "localhost:6379",
+	Addr:     os.Getenv("REDIS_ENDPOINT"),
 	Password: "",
 	DB:       0,
 })
@@ -81,10 +80,16 @@ func putUser(c *gin.Context) {
 		// validate json payload
 		c.Header("Content-Type", "application/json") // BindJSON set text/plain if error
 		err := c.BindJSON(&birthday)
+		var msg = "cannot find date of birth"
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error":   "cannot find date of birth",
+				"error":   msg,
 				"details": err.Error(),
+			})
+		} else if time.Time(birthday.Value).IsZero() {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   msg,
+				"details": "malformed key",
 			})
 		} else {
 			// validate future date
@@ -104,7 +109,6 @@ func putUser(c *gin.Context) {
 					})
 				} else {
 					c.Status(http.StatusNoContent)
-					log.Printf("%s, %s", username, textual)
 				}
 			}
 		}
@@ -132,17 +136,33 @@ func getUser(c *gin.Context) {
 				"details": err,
 			})
 		} else {
-			//now := time.Now()
-			n := 1
+			n := daysNextBirthday(birthday)
 			var msg string
 			if n == 0 {
 				msg = fmt.Sprintf("Hello, %s! Happy birthday!", username)
 			} else {
-				msg = fmt.Sprintf("Hello, %s! Your birthday is in %d day(s), %v", username, n, birthday)
+				msg = fmt.Sprintf("Hello, %s! Your birthday is in %d day(s)", username, n)
 			}
 			c.JSON(http.StatusOK, gin.H{
 				"message": msg,
 			})
 		}
 	}
+}
+
+func daysNextBirthday(b time.Time) int {
+	now := time.Now().Truncate(24 * time.Hour) // truncate the time to the day
+	next_birthday := time.Date(
+		now.Year(),
+		b.Month(),
+		b.Day(),
+		0, 0, 0, 0, // truncate the time to the day
+		time.UTC, // strip location
+	)
+	duration := next_birthday.Sub(now)
+	if duration < 0 { // birthday passed in this year
+		next_birthday = time.Date(now.Year()+1, b.Month(), b.Day(), 0, 0, 0, 0, time.UTC)
+		duration = next_birthday.Sub(now)
+	}
+	return int(duration.Hours() / 24)
 }

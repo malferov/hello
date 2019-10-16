@@ -30,7 +30,7 @@ resource "aws_ecs_task_definition" "task" {
       },
       {
         "name": "REDIS_ENDPOINT",
-	"value": "aws_elasticache_replication_group.redis.primary_endpoint_address"
+	"value": "${aws_elasticache_replication_group.redis.primary_endpoint_address}:${local.redis_port}"
       }
     ],
     "portMappings": [

@@ -7,11 +7,6 @@ data "aws_ami" "ami" {
     values = ["amzn2-ami-ecs-hvm-*-x86_64-ebs"]
   }
 }
-// temp
-resource "aws_key_pair" "key" {
-  key_name   = "node"
-  public_key = file(local.public_key)
-}
 
 resource "aws_launch_configuration" "launch" {
   image_id             = data.aws_ami.ami.image_id
@@ -20,7 +15,6 @@ resource "aws_launch_configuration" "launch" {
 #!/bin/bash
 echo ECS_CLUSTER=ecs | sudo tee /etc/ecs/ecs.config
 USERDATA
-  key_name             = aws_key_pair.key.id
   security_groups      = [aws_security_group.node.id]
   iam_instance_profile = aws_iam_instance_profile.ecs-instance-profile.id
   # the below is acceptable for the sake of simplicity
