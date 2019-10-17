@@ -22,6 +22,62 @@ I took liberties with requirements and added two extra endpoints
 I was bearing in mind the following aspects while creating infrastructure: `security`, `reliability`, `performance`, `operational efficiency`, `cost aspect`.  
 `NB` For `high load` application mode, autoscaling scheduler needs to be implemented. This setup is fixed in size. Amount of ECS and Redis nodes, as well as application instances could be adjusted in `var.tf`  
 `NB` For `secure` setup I would use authentication and harden endpoints with TLS.  
+
+Use root user in your AWS account, or manually create `management_user` and apply the policy below.
+<details><summary>IAM policy for management user</summary>
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "iam:*",
+            "Resource": [
+                "arn:aws:iam::*:policy/*",
+                "arn:aws:iam::*:user/*",
+                "arn:aws:iam::*:group/*",
+                "arn:aws:iam::*:role/*",
+                "arn:aws:iam::*:instance-profile/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:*",
+                "elasticloadbalancing:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ecs:*",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ecr:*",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "elasticache:*",
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+</details>
+
+After creation management user and applying policy above, create security credentials for that user.  
 In order to deploy infrastructure, proceed with following steps on Management Workstation.  
 Export the following environment variables and set parameters in `var.tf` file.  
 Environment variables consist of sensitive data, while var.tf consists of parameters committed to the source.  
