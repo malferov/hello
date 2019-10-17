@@ -3,51 +3,45 @@
 `python` or `golang`  
 I like to do tasks in Python. But here we require production solution and I think Python could add some configuration complexity with WSGI/FastCGI. Golang is a single binary option and seems easy to deploy. So here we `go` :)  
 
-Kubernetes in GCP or AWS  
-AWS ECS  
-AWS EC2  
+`kubernetes or not`  
+I was thinking of implementing in Kubernetes. A bit complex to setup, but very handy deployments. I did not choose this option because I don't have enough production experience with Kube.  
 
 `AWS` or `GCP`  
+I would choose GCP for kubernetes setup definitely. In AWS EKS we have to manage cluster nodes ourselves. But for docker service AWS is more commonly used. So ECS.  
 
 `storage/database` choice  
-Simple interface with http json API  
-
-assumptions
-`<username>` is unique  
-
-NB For `high load` application mode cluster will scale via Autoscaling Group. AMI image I would create with Packer. `etcd` supports service discovery.  
-NB For `secure` setup I would use authentication and harden endpoint with TLS.  
-
-Sometimes it is not an easy decision to make while designing infrastructure.  
-Because it will affect further maintenance and operational costs, velocity of development cycle.  
-It is not a single person decision.  
-I would like to ask you guys to discuss together pros and cons, and make a deliberate decision ;)  
+I was looking for simple interface with http json API. The purpos was to have simple app without extra SDK dependency. I was considering CouchDB and Elasticsearch. Later is top product but not exactly that we want. We need key/value store. CouchDB matches well, but needs to be installed on EC2 (less automation), or container with persistent volume (more configs). I also was considering Etcd and KV engine for Consul or Vault. All those have sophisticated cluster setup. I did not like all options above, and realized we have in AWS Redis managed service. That option works for both cloud and on premises. And sdk is quite light for go. So here we go.  
 
 ### application
-i took liberties with requirements and added two extra endpoints  
-`/hc` because it is needed by loadbalancer infrastructure, and  
+I had previously experience with gin-gonic framework. Some time ago I chose that framework because of its excellent performance reports.  
+I took liberties with requirements and added two extra endpoints  
+`/hc` because it is needed by load balancer infrastructure, and  
 `/version` this one helps to debug and test deployment rollout  
 
 ### infrastructure
-export the following environment variables and set parameters in `var.tf` file.  
-environment variables consist of sevsitive data, while var.tf consists of parameters committed to the source.  
+I was bearing in mind the following aspects while creating infrastructure: `security`, `reliability`, `performance`, `operational efficiency`, `cost aspect`.  
+`NB` For `high load` application mode, autoscaling scheduler needs to be implemented. This setup is fixed in size. Amount of ECS and Redis nodes, as well as application instances could be adjusted in `var.tf`  
+`NB` For `secure` setup I would use authentication and harden endpoints with TLS.  
+In order to deploy infrastructure, proceed with following steps on Management Workstation.  
+Export the following environment variables and set parameters in `var.tf` file.  
+Environment variables consist of sensitive data, while var.tf consists of parameters committed to the source.  
 ```
-export AWS_ACCESS_KEY_ID=<your aws access key>
-export AWS_SECRET_ACCESS_KEY=<your aws secret key>
-export AWS_DEFAULT_REGION=<aws region of operation>
+export AWS_ACCESS_KEY_ID=<your_aws_access_key>
+export AWS_SECRET_ACCESS_KEY=<your_aws_secret_key>
+export AWS_DEFAULT_REGION=<aws_region_of_operation>
 export TF_VAR_region=$AWS_DEFAULT_REGION
 # the latter duplication is necessary for work together terraform and aws cli
 # aws cli needed later during build stage
 ```
-in order to deploy cloud infrastructure to aws we use terraform tool and HCL configuration language.  
-terraform v0.12 needs to be installed on management workstation.  
+In order to deploy cloud infrastructure to aws we use terraform tool and HCL configuration language.  
+terraform v0.12 needs to be installed on Management Workstation.  
 ```
 curl -LO https://releases.hashicorp.com/terraform/0.12.10/terraform_0.12.10_linux_amd64.zip
 unzip ./terraform_0.12.10_linux_amd64.zip
 sudo mv ./terraform /usr/local/bin
 ```
 checkout master branch, initialize your working directory and deploy infrastructure.  
-NB in terraform we use `local` backend. this works for single user mode. to work on infrastructure collaboratively we require to setup remote (shared) backend. before we used s3, but hashicorp provides cloud backend now. no needs to provision buckets in advance anymore.
+`NB` In terraform we use `local` backend. This works for single user mode. In order to work on infrastructure collaboratively we require to setup remote (shared) backend. Earlier we used s3, but hashicorp provides cloud backend now. No needs to provision buckets in advance anymore.
 ```
 git checkout master
 terraform init
@@ -55,26 +49,31 @@ terraform apply
 ```
 
 ### build
-install aws cli
+There is no branch model, unit tests run only on master. It is triggered by GitHub Actions. Whenever we want to build an image from any tag or commit, we pull that version to Management Workstation.
+Then build an artifact and push in ECR. Later the artifact is used by service configuration in ECS.  
+On Management Workstation  
 ```
+# install aws cli
 pip3 install awscli --upgrade --user
 ```
-export the following environment variable either in local or github actions environment.  
+export the following environment variable  
 ```
 terraform state show aws_ecr_repository.ecr | grep repository_url
 export HELLO_REPOSITORY_URL=<repository_url>
+```
+build application and push artifact  
+```
 cd src
 ./build.sh
 ```
-github actions
-ECR
 
-### deployment
+### app deployment
 Intentionally manual process. Based on my previous experience all production releases were semi-automated.
 Because of existence of release management process.
 Goal here is to automate deployment, having a single action.
-In order to deploy `hello` to production we need two actions `bump app version` & `terraform apply`.
+In order to deploy `hello` application to production environment we need two actions `bump app version` & `terraform apply`.
 ```
+git checkout <version_to_deploy>
 # this step reads the latest artifact version, and set it inside infra configuration
 # for the sake of simplicity we use commit SHA for artifacts versioning
 ./bump.sh
