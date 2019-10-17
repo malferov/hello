@@ -25,6 +25,7 @@ I was bearing in mind the following aspects while creating infrastructure: `secu
 In order to deploy infrastructure, proceed with following steps on Management Workstation.  
 Export the following environment variables and set parameters in `var.tf` file.  
 Environment variables consist of sensitive data, while var.tf consists of parameters committed to the source.  
+Please note it is necessary to whitelist your nat public ip in var.tf (`trasted` variable)
 ```
 export AWS_ACCESS_KEY_ID=<your_aws_access_key>
 export AWS_SECRET_ACCESS_KEY=<your_aws_secret_key>
