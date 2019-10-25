@@ -1,4 +1,9 @@
 ## Welcome to "hello" application!
+### requirements
+Create a sample application with http json API, production ready infrastructure, and automated one click deployment.  
+Diagram  
+https://docs.google.com/document/d/1AdzaqEfxJR_i9JV5xn-o4WkYh_mcCfjjXyZN1PIPRFc/edit?usp=sharing
+
 ### some choice
 `python` or `golang`  
 I like to do tasks in Python. But here we require production solution and I think Python could add some configuration complexity with WSGI/FastCGI. Golang is a single binary option and seems easy to deploy. So here we `go` :)  
@@ -14,7 +19,7 @@ I was looking for simple interface with http json API. The purpos was to have si
 
 ### application
 I had previously experience with gin-gonic framework. Some time ago I chose that framework because of its excellent performance reports.  
-I took liberties with requirements and added two extra endpoints  
+The following two extra endpoints will be added to application for utility purpose  
 `/hc` because it is needed by load balancer infrastructure, and  
 `/version` this one helps to debug and test deployment rollout  
 
