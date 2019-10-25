@@ -1,8 +1,7 @@
 ## Welcome to "hello" application!
 ### requirements
 Create a sample application with http json API, production ready infrastructure, and automated one click deployment.  
-Diagram  
-https://docs.google.com/document/d/1AdzaqEfxJR_i9JV5xn-o4WkYh_mcCfjjXyZN1PIPRFc/edit?usp=sharing
+[Solution Diagram](https://docs.google.com/document/d/1AdzaqEfxJR_i9JV5xn-o4WkYh_mcCfjjXyZN1PIPRFc/edit?usp=sharing "Diagram")
 
 ### some choice
 `python` or `golang`  
